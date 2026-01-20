@@ -1,5 +1,23 @@
-
 # PHP_Laravel12_GitScrum
+
+<p align="center">
+<a href="https://laravel.com">
+<img src="https://img.shields.io/badge/Laravel-Framework-red" alt="Laravel">
+</a>
+<a href="https://www.php.net">
+<img src="https://img.shields.io/badge/PHP-%3E%3D7.1-blue" alt="PHP Version">
+</a>
+<a href="#">
+<img src="https://img.shields.io/badge/Project-GitScrum-orange" alt="GitScrum">
+</a>
+<a href="#">
+<img src="https://img.shields.io/badge/Agile-Scrum-brightgreen" alt="Agile Scrum">
+</a>
+<a href="#">
+<img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+</a>
+</p>
+
 
 ## Overview
 
