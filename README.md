@@ -1,59 +1,293 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# PHP_Laravel12_GitScrum
 
-## About Laravel
+## Overview
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+GitScrum is an open-source **Scrum & Agile project management tool** built on **Laravel**. It helps teams manage **projects, sprints, and issues** efficiently using Agile methodologies. The application supports **OAuth authentication** and integrates with **GitHub, GitLab, and Bitbucket**, making it ideal for modern development workflows.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+GitScrum is suitable for:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Agile & Scrum teams
+* Software development teams
+* Project managers
+* Open-source contributors
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Features
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* Scrum & Agile project management
+* Project, Sprint, and Issue tracking
+* OAuth authentication (GitHub, GitLab, Bitbucket)
+* Multi-language support
+* Team collaboration
+* Sprint progress visualization
+* Git repository integration
+* Laravel-based modular architecture
+* Optional Docker support
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## STEP 1: System Requirements
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Ensure your system meets the following requirements:
 
-## Contributing
+* PHP: >= 7.1 (Recommended: PHP 7.4)
+* Composer
+* Web Server: Apache or Nginx
+* Database: MySQL or MariaDB
+* Git
+* Docker (Optional)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Check Installed Versions
 
-## Code of Conduct
+```bash
+php -v
+composer -v
+git --version
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## STEP 2: Get the Project Source Code
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Option A: Install via Composer (Recommended)
 
-## License
+```bash
+composer create-project gitscrum-community-edition/laravel-gitscrum --stability=stable --keep-vcs
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+### Option B: Clone from GitHub
+
+```bash
+git clone https://github.com/GitScrum-Community/laravel-gitscrum.git
+cd laravel-gitscrum
+composer update
+composer run-script post-root-package-install
+```
+
+---
+
+## STEP 3: Environment Configuration (.env)
+
+### Set Application URL
+
+Open `.env` and update:
+
+```env
+APP_URL=http://localhost/gitscrum
+```
+
+⚠️ Protocol (http or https) is mandatory
+
+---
+
+### Set Application Language
+
+Supported languages:
+
+```
+en | zh | zh_cn | ru | de | es | pt | it | id | fr | hu
+```
+
+Example:
+
+```env
+APP_LANG=en
+```
+
+---
+
+## STEP 4: Database Setup
+
+### 1️⃣ Create Database
+
+Create a MySQL database manually:
+
+```sql
+CREATE DATABASE gitscrum;
+```
+
+---
+
+### 2️⃣ Update Database Credentials in .env
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=gitscrum
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+---
+
+### 3️⃣ Run Migrations & Seeder
+
+```bash
+php artisan migrate
+php artisan db:seed --class=SettingSeeder
+```
+
+✔ Database tables created
+✔ Default settings inserted
+
+---
+
+## STEP 5: Generate Application Key
+
+```bash
+php artisan key:generate
+```
+
+---
+
+## STEP 6: GitHub OAuth Configuration
+
+Create GitHub OAuth Application:
+
+* Application Name: gitscrum
+* Homepage URL: Same as APP_URL
+* Authorization Callback URL:
+
+```
+http://APP_URL/auth/provider/github/callback
+```
+
+Add to `.env`:
+
+```env
+GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
+```
+
+---
+
+## STEP 7: GitLab OAuth Configuration (Optional)
+
+Create GitLab Application:
+
+* Name: gitscrum
+* Redirect URI:
+
+```
+http://APP_URL/auth/provider/gitlab/callback
+```
+
+* Scopes:
+
+```
+api, read_user
+```
+
+Add to `.env`:
+
+```env
+GITLAB_KEY=your_application_id
+GITLAB_SECRET=your_secret
+GITLAB_INSTANCE_URI=https://gitlab.com/
+```
+
+---
+
+## STEP 8: Bitbucket OAuth Configuration (Optional)
+
+Create Bitbucket OAuth Consumer:
+
+* Name: gitscrum
+* Callback URL:
+
+```
+http://APP_URL/auth/provider/bitbucket/callback
+```
+
+* URL:
+
+```
+http://APP_URL
+```
+
+* Permissions:
+
+```
+repositories (write)
+issues (write)
+```
+
+* ❌ Uncheck "This is a private consumer"
+
+Add to `.env`:
+
+```env
+BITBUCKET_CLIENT_ID=your_key
+BITBUCKET_CLIENT_SECRET=your_secret
+```
+
+---
+
+## STEP 9: Proxy Configuration (Optional)
+
+If your server uses a proxy, configure the following in `.env`:
+
+```env
+PROXY_PORT=
+PROXY_METHOD=
+PROXY_SERVER=
+PROXY_USER=
+PROXY_PASS=
+```
+
+---
+
+## STEP 10: Run the Application
+
+### ▶ Using Laravel Built-in Server
+
+```bash
+php artisan serve
+```
+
+Open in browser:
+
+```
+http://127.0.0.1:8000
+```
+
+---
+
+### ▶ Using Apache / Nginx
+
+Set your document root to:
+
+```
+/laravel-gitscrum/public
+```
+
+---
+
+## STEP 11: Login & Verify
+
+✔ Application loads successfully
+✔ Login/Register using GitHub, GitLab, or Bitbucket
+✔ Create projects, sprints, and issues
+
+---
+
+## GitScrum Screenshots
+
+<img width="975" height="845" alt="image" src="https://github.com/user-attachments/assets/8192a510-747a-4ea3-af0b-3aa003258a08" />
+
+<img width="975" height="539" alt="image" src="https://github.com/user-attachments/assets/2a830bf6-5ece-4284-8678-5cdcee0b7920" />
+
+<img width="975" height="520" alt="image" src="https://github.com/user-attachments/assets/720d03f5-96bd-4d0e-8a50-b518214af9d9" />
+
+<img width="975" height="611" alt="image" src="https://github.com/user-attachments/assets/df787826-09c7-4ab7-8244-2940bdc3725c" />
+
+
+
+
