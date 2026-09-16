@@ -33,12 +33,17 @@ class ScrumIssue extends Model
 
     public function assignee()
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(
+            User::class,
+            'assigned_to'
+        );
     }
 
     public function activities()
     {
-        return $this->hasMany(IssueActivity::class);
+        return $this->hasMany(
+            IssueActivity::class
+        );
     }
 
     public function isOverdue(): bool
