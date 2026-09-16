@@ -44,9 +44,38 @@ class ScrumController extends Controller
             ->where('status', '!=', 'done')
             ->count();
 
+        $todoIssues = ScrumIssue::where(
+            'status',
+            'todo'
+        )->count();
+
+        $inProgressIssues = ScrumIssue::where(
+            'status',
+            'in_progress'
+        )->count();
+
+        $criticalIssues = ScrumIssue::where(
+            'priority',
+            'critical'
+        )->count();
+
         $completionPercentage = $totalIssues > 0
             ? round(($completedIssues / $totalIssues) * 100)
             : 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Recent Activities
+        |--------------------------------------------------------------------------
+        */
+
+        $recentActivities = IssueActivity::with([
+            'issue',
+            'user',
+        ])
+            ->latest()
+            ->take(10)
+            ->get();
 
         return view('scrum.dashboard', compact(
             'sprints',
@@ -54,7 +83,11 @@ class ScrumController extends Controller
             'completedIssues',
             'pendingIssues',
             'overdueIssues',
-            'completionPercentage'
+            'todoIssues',
+            'inProgressIssues',
+            'criticalIssues',
+            'completionPercentage',
+            'recentActivities'
         ));
     }
 
@@ -99,11 +132,21 @@ class ScrumController extends Controller
             'assignee',
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+
         if ($request->filled('search')) {
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
+                $q->where(
+                    'title',
+                    'like',
+                    "%{$search}%"
+                )
                     ->orWhere(
                         'description',
                         'like',
@@ -112,12 +155,24 @@ class ScrumController extends Controller
             });
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+
         if ($request->filled('status')) {
             $query->where(
                 'status',
                 $request->status
             );
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Priority Filter
+        |--------------------------------------------------------------------------
+        */
 
         if ($request->filled('priority')) {
             $query->where(
@@ -126,6 +181,12 @@ class ScrumController extends Controller
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Sprint Filter
+        |--------------------------------------------------------------------------
+        */
+
         if ($request->filled('sprint_id')) {
             $query->where(
                 'sprint_id',
@@ -133,18 +194,158 @@ class ScrumController extends Controller
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Due Date From
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('due_from')) {
+            $query->whereDate(
+                'due_date',
+                '>=',
+                $request->due_from
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Due Date To
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('due_to')) {
+            $query->whereDate(
+                'due_date',
+                '<=',
+                $request->due_to
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Overdue Only
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->boolean('overdue')) {
+            $query->whereDate(
+                'due_date',
+                '<',
+                now()
+            )
+                ->where(
+                    'status',
+                    '!=',
+                    'done'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Summary
+        |--------------------------------------------------------------------------
+        */
+
+        $summaryQuery = clone $query;
+
+        $todoCount = (clone $summaryQuery)
+            ->where('status', 'todo')
+            ->count();
+
+        $inProgressCount = (clone $summaryQuery)
+            ->where('status', 'in_progress')
+            ->count();
+
+        $doneCount = (clone $summaryQuery)
+            ->where('status', 'done')
+            ->count();
+
+        $filteredTotal = (clone $summaryQuery)
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sorting
+        |--------------------------------------------------------------------------
+        */
+
+        $allowedSorts = [
+            'id',
+            'title',
+            'status',
+            'priority',
+            'due_date',
+            'created_at',
+        ];
+
+        $sort = $request->get(
+            'sort',
+            'created_at'
+        );
+
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'created_at';
+        }
+
+        $direction = $request->get(
+            'direction',
+            'desc'
+        );
+
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'desc';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Per Page
+        |--------------------------------------------------------------------------
+        */
+
+        $perPage = (int) $request->get(
+            'per_page',
+            10
+        );
+
+        if (!in_array($perPage, [5, 10, 25, 50])) {
+            $perPage = 10;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pagination
+        |--------------------------------------------------------------------------
+        */
+
         $issues = $query
-            ->latest()
-            ->paginate(10)
+            ->orderBy($sort, $direction)
+            ->paginate($perPage)
             ->withQueryString();
 
         $sprints = Sprint::orderBy('name')->get();
 
-        return view('scrum.issues.index', compact(
-            'issues',
-            'sprints'
-        ));
+        return view(
+            'scrum.issues.index',
+            compact(
+                'issues',
+                'sprints',
+                'todoCount',
+                'inProgressCount',
+                'doneCount',
+                'filteredTotal',
+                'sort',
+                'direction',
+                'perPage'
+            )
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Issue
+    |--------------------------------------------------------------------------
+    */
 
     public function createIssue()
     {
@@ -152,11 +353,20 @@ class ScrumController extends Controller
 
         $users = User::orderBy('name')->get();
 
-        return view('scrum.issues.create', compact(
-            'sprints',
-            'users'
-        ));
+        return view(
+            'scrum.issues.create',
+            compact(
+                'sprints',
+                'users'
+            )
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Store Issue
+    |--------------------------------------------------------------------------
+    */
 
     public function storeIssue(Request $request)
     {
@@ -181,8 +391,17 @@ class ScrumController extends Controller
 
         return redirect()
             ->route('scrum.issues')
-            ->with('success', 'Issue created successfully.');
+            ->with(
+                'success',
+                'Issue created successfully.'
+            );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Edit Issue
+    |--------------------------------------------------------------------------
+    */
 
     public function editIssue(ScrumIssue $issue)
     {
@@ -192,9 +411,19 @@ class ScrumController extends Controller
 
         return view(
             'scrum.issues.edit',
-            compact('issue', 'sprints', 'users')
+            compact(
+                'issue',
+                'sprints',
+                'users'
+            )
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Issue
+    |--------------------------------------------------------------------------
+    */
 
     public function updateIssue(
         Request $request,
@@ -235,8 +464,17 @@ class ScrumController extends Controller
 
         return redirect()
             ->route('scrum.issues')
-            ->with('success', 'Issue updated successfully.');
+            ->with(
+                'success',
+                'Issue updated successfully.'
+            );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Show Issue
+    |--------------------------------------------------------------------------
+    */
 
     public function showIssue(ScrumIssue $issue)
     {
@@ -252,12 +490,225 @@ class ScrumController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Delete Issue
+    |--------------------------------------------------------------------------
+    */
+
     public function deleteIssue(ScrumIssue $issue)
     {
         $issue->delete();
 
         return redirect()
             ->route('scrum.issues')
-            ->with('success', 'Issue deleted successfully.');
+            ->with(
+                'success',
+                'Issue deleted successfully.'
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bulk Delete
+    |--------------------------------------------------------------------------
+    */
+
+    public function bulkDeleteIssues(Request $request)
+    {
+        $validated = $request->validate([
+            'issue_ids' => 'required|array|min:1',
+            'issue_ids.*' => 'integer|exists:scrum_issues,id',
+        ]);
+
+        $count = ScrumIssue::whereIn(
+            'id',
+            $validated['issue_ids']
+        )->count();
+
+        ScrumIssue::whereIn(
+            'id',
+            $validated['issue_ids']
+        )->delete();
+
+        return redirect()
+            ->route('scrum.issues')
+            ->with(
+                'success',
+                $count . ' issue(s) deleted successfully.'
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CSV Export
+    |--------------------------------------------------------------------------
+    */
+
+    public function exportIssues(Request $request)
+    {
+        $query = ScrumIssue::with([
+            'sprint',
+            'assignee',
+        ]);
+
+        /*
+        | Search
+        */
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where(
+                    'title',
+                    'like',
+                    "%{$search}%"
+                )
+                    ->orWhere(
+                        'description',
+                        'like',
+                        "%{$search}%"
+                    );
+            });
+        }
+
+        /*
+        | Status
+        */
+
+        if ($request->filled('status')) {
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+        /*
+        | Priority
+        */
+
+        if ($request->filled('priority')) {
+            $query->where(
+                'priority',
+                $request->priority
+            );
+        }
+
+        /*
+        | Sprint
+        */
+
+        if ($request->filled('sprint_id')) {
+            $query->where(
+                'sprint_id',
+                $request->sprint_id
+            );
+        }
+
+        /*
+        | Due Date From
+        */
+
+        if ($request->filled('due_from')) {
+            $query->whereDate(
+                'due_date',
+                '>=',
+                $request->due_from
+            );
+        }
+
+        /*
+        | Due Date To
+        */
+
+        if ($request->filled('due_to')) {
+            $query->whereDate(
+                'due_date',
+                '<=',
+                $request->due_to
+            );
+        }
+
+        /*
+        | Overdue
+        */
+
+        if ($request->boolean('overdue')) {
+            $query->whereDate(
+                'due_date',
+                '<',
+                now()
+            )
+                ->where(
+                    'status',
+                    '!=',
+                    'done'
+                );
+        }
+
+        $issues = $query
+            ->latest()
+            ->get();
+
+        $fileName =
+            'scrum_issues_' .
+            now()->format('Y_m_d_H_i_s') .
+            '.csv';
+
+        return response()->streamDownload(
+            function () use ($issues) {
+
+                $handle = fopen(
+                    'php://output',
+                    'w'
+                );
+
+                fputcsv($handle, [
+                    'ID',
+                    'Title',
+                    'Description',
+                    'Sprint',
+                    'Assigned To',
+                    'Status',
+                    'Priority',
+                    'Due Date',
+                    'Created At',
+                ]);
+
+                foreach ($issues as $issue) {
+                    fputcsv($handle, [
+                        $issue->id,
+                        $issue->title,
+                        $issue->description,
+                        $issue->sprint->name ?? '',
+                        $issue->assignee->name ?? 'Unassigned',
+                        ucfirst(
+                            str_replace(
+                                '_',
+                                ' ',
+                                $issue->status
+                            )
+                        ),
+                        ucfirst($issue->priority),
+                        $issue->due_date
+                            ? $issue->due_date->format('Y-m-d')
+                            : '',
+                        $issue->created_at
+                            ? $issue->created_at->format(
+                                'Y-m-d H:i:s'
+                            )
+                            : '',
+                    ]);
+                }
+
+                fclose($handle);
+            },
+            $fileName,
+            [
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
+            ]
+        );
     }
 }
