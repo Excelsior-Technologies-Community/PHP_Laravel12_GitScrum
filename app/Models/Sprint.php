@@ -69,4 +69,24 @@ class Sprint extends Model
             ->where('status', '!=', 'done')
             ->count();
     }
+
+    public function getTotalStoryPointsAttribute(): int
+    {
+        return (int) $this->issues()->sum('story_points');
+    }
+
+    public function getCompletedStoryPointsAttribute(): int
+    {
+        return (int) $this->issues()->where('status', 'done')->sum('story_points');
+    }
+
+    public function getTotalEstimatedHoursAttribute(): float
+    {
+        return (float) $this->issues()->sum('estimated_hours');
+    }
+
+    public function getTotalSpentHoursAttribute(): float
+    {
+        return (float) $this->issues()->sum('spent_hours');
+    }
 }
