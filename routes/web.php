@@ -24,7 +24,39 @@ Route::prefix('scrum')
 
         /*
         |--------------------------------------------------------------------------
-        | Sprint
+        | Kanban Board
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/kanban',
+            [ScrumController::class, 'kanban']
+        )->name('kanban');
+
+        Route::post(
+            '/kanban/move',
+            [ScrumController::class, 'moveIssue']
+        )->name('kanban.move');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Analytics & Sprint Burndown
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/analytics',
+            [ScrumController::class, 'analytics']
+        )->name('analytics');
+
+        Route::get(
+            '/analytics/burndown-data',
+            [ScrumController::class, 'burndownData']
+        )->name('analytics.burndown-data');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sprints
         |--------------------------------------------------------------------------
         */
 
@@ -40,7 +72,7 @@ Route::prefix('scrum')
 
         /*
         |--------------------------------------------------------------------------
-        | Issue Export
+        | Issue Export & Bulk Delete
         |--------------------------------------------------------------------------
         */
 
@@ -49,12 +81,6 @@ Route::prefix('scrum')
             [ScrumController::class, 'exportIssues']
         )->name('issues.export');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Issue Bulk Delete
-        |--------------------------------------------------------------------------
-        */
-
         Route::delete(
             '/issues/bulk-delete',
             [ScrumController::class, 'bulkDeleteIssues']
@@ -62,7 +88,7 @@ Route::prefix('scrum')
 
         /*
         |--------------------------------------------------------------------------
-        | Issues
+        | Issues CRUD
         |--------------------------------------------------------------------------
         */
 
@@ -100,4 +126,57 @@ Route::prefix('scrum')
             '/issues/{issue}',
             [ScrumController::class, 'deleteIssue']
         )->name('issues.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Work Logs (Time Tracking)
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post(
+            '/issues/{issue}/work-logs',
+            [ScrumController::class, 'storeWorkLog']
+        )->name('issues.work-logs.store');
+
+        Route::delete(
+            '/work-logs/{workLog}',
+            [ScrumController::class, 'deleteWorkLog']
+        )->name('work-logs.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Comments & Discussions
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post(
+            '/issues/{issue}/comments',
+            [ScrumController::class, 'storeComment']
+        )->name('issues.comments.store');
+
+        Route::delete(
+            '/comments/{comment}',
+            [ScrumController::class, 'deleteComment']
+        )->name('comments.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Attachments
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post(
+            '/issues/{issue}/attachments',
+            [ScrumController::class, 'storeAttachment']
+        )->name('issues.attachments.store');
+
+        Route::get(
+            '/attachments/{attachment}/download',
+            [ScrumController::class, 'downloadAttachment']
+        )->name('attachments.download');
+
+        Route::delete(
+            '/attachments/{attachment}',
+            [ScrumController::class, 'deleteAttachment']
+        )->name('attachments.destroy');
     });
